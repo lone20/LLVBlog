@@ -1,0 +1,135 @@
+﻿@model LLVBog.Models.NewBlogModel
+
+@{
+    ViewBag.Page = "CreateNew";
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+}
+
+
+<!-- Page Content -->
+<!-- Banner Starts Here -->
+<div class="heading-page header-text">
+    <section class="page-heading">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12"> 
+                    <div class="text-content">
+                        <h4>Trang cá nhân</h4>                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+<!-- Banner Ends Here -->
+
+<section class="blog-posts">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="all-blog-posts">
+                    <div class="row ">
+
+                        <div class="sidebar-heading">
+                            <h2 class=" main-content-heading">đăng bài</h2>
+                        </div>
+                        <div class="col-lg-12 form">
+                            @Html.LabelFor(m => m.Title)
+                            @Html.TextBoxFor(m => m.Title)                            
+
+                            @Html.LabelFor(m=>m.ImageUrl)
+                            @Html.TextBoxFor(m=>m.ImageUrl)
+
+                            @Html.LabelFor(m=>m.Categories)
+                            <div class="group-checkbox">
+                                @foreach (var item in Model.Categories)
+                                {
+                                    <label class="uncheck" onclick="toggleHandler(this)" for="@item.CategoryId">@item.Name</label>
+                                    <input type="checkbox" name="CategoryCheck" id="@item.CategoryId" value="@item.CategoryId" style="display:none" />
+                                }
+                            </div>
+                            
+                            <label>Nội dung bài viết</label>
+                            <textarea name="editor1" id="editor1"></textarea>
+                            <button class="submit" onclick="submitHandler()">Tạo mới</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="sidebar">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="sidebar-item recent-posts">
+                                <div class="sidebar-heading">
+                                    <h2 class="text-title">Tác vụ</h2>
+                                </div>
+                                <div class="content">
+                                    @if (ViewBag.IsAdmin != null && ViewBag.IsAdmin == true)
+                                    {
+                                        <div class="content-item"><a href="/Admin/Account">Tới trang quản trị</a></div>
+                                    }
+                                    <div class="content-item"><a href="CreateNew">Đăng bài</a></div>
+                                    <div class="content-item"><a href="Detail">Thông tin tài khoản</a></div>
+                                    <div class="content-item"><a href="#">Đổi mật khẩu</a></div>
+                                    <div class="content-item"><a href="/Login/Logout">Đăng xuất</a></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<form action="/Profile/Me" id="comeback"></form>
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        CKEDITOR.replace("editor1");
+
+        const submitHandler = () => {
+            var categories = document.getElementsByName("CategoryCheck");
+            var lstcategories = [];
+            var j = 0;
+            for (var i = 0; i < categories.length; i++) {
+                if ($(categories[i]).prop('checked') == true) {
+                    lstcategories[j++] =  $(categories[i]).val() 
+                };
+            }
+            console.log(lstcategories)
+            var content = CKEDITOR.instances.editor1.getData();
+            var title = document.getElementById("Title");
+            var imageUrl = document.getElementById("ImageUrl");
+            var blog = { Content: content, Title: title.value, ThisCategories: lstcategories, ImageUrl: imageUrl.value };
+            console.log(blog)
+            $.ajax({
+                type: "POST",
+                data: JSON.stringify(blog),
+                url: "/Profile/CreateNew",
+                contentType: "application/json"
+            })
+                .done((data) => {
+                    if (data.result == true)
+                        alert("Tạo thành công")
+                    setTimeout(() => {
+                        console.log("comeback");
+                        document.getElementById("comeback").submit();
+                    }, 2000 )
+                })
+                .fail((error) => {
+                    console.log(error.responseText);
+                })
+        }    
+
+
+        const toggleHandler = (ele) => {
+            if ($(ele).hasClass("uncheck"))
+                $(ele).removeClass("uncheck").addClass("check")
+            else
+                $(ele).removeClass("check").addClass("uncheck")
+        }
+    </script>
+}
+
